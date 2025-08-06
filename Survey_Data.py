@@ -7,8 +7,16 @@ class SurveyData:
     解析题目信息，获取被试答题数据等功能。
     """
     def __init__(self, filename):
-        self.df = pd.read_excel(filename, dtype=str)
+        # 只读取第一个sheet，sheet_name=0表示第一个sheet
+        self.df = pd.read_excel(filename, sheet_name=0, dtype=str)
         self.df = self.df.fillna(value=pd.NA)
+        # qinfo: pandas DataFrame，存储问卷题目的元数据信息
+        # 包含字段:
+        # - raw_col: 原始Excel列名
+        # - original_qid: 提取的原始题号前缀（如S66、M10、F3等）
+        # - question_id: 题号的数字部分
+        # - qtype: 题型（S:单选题, M:多选题, F:开放题, R:排序题, META:元数据列）
+        # - short_name: 简化后的列名
         self.qinfo = self.parse_headers(self.df.columns)
 
     def parse_headers(self, columns):
@@ -109,11 +117,11 @@ class SurveyData:
 
 # ==== 示例测试 ====
 if __name__ == '__main__':
-    survey = SurveyData('../survey_data/US/D2426-US.xlsx')
+    survey = SurveyData('SurveyResults_2025-05-09-03-24-30.xlsx')
     try:
-        answers, qtype = survey.get_answers_by_qid('S66')
+        answers, qtype = survey.get_answers_by_qid('S2',return_qtype=True)
         print(f"题型: {qtype}")
-        print(f"S66的所有作答数据如下：")
+        print(f"S2的所有作答数据如下：")
         print(answers.head())
         print(f"共有{answers.shape[1]}个选项/列")
     except Exception as e:

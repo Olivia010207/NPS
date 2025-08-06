@@ -124,6 +124,44 @@ def map_income_group(series, mapping, unknown_val=pd.NA):
             lookup[raw] = group
     return series.map(lambda x: lookup.get(x, unknown_val))
 
+def process_income_group(survey, original_qid='S68', group_col_name='g1 income group from S68'):
+    """
+    处理收入分组并添加到survey对象中
+    参数:
+        survey: SurveyData对象
+        original_qid: 收入题的原始题号，默认为'S68'
+        group_col_name: 新生成的分组列名
+    """
+    # 定义收入分组映射
+    income_group_mapping = {
+        'a低收入': ['Less than £20,000','£20,000 - £34,999'],
+        'b中收入': ['£35,000 - £54,999', '£55,000 - £79,999','£80,000 - £119,999'],
+        'c高收入': ['£120,000 or more'],
+        'dPrefer not to say': ['Prefer not to say']
+    }
+    
+    # 获取收入列
+    income_col = survey.qinfo[survey.qinfo['original_qid'] == original_qid]['raw_col'].iloc[0]
+    
+    # 应用分组映射
+    survey.df[group_col_name] = map_income_group(survey.df[income_col], income_group_mapping)
+    
+    # 更新qinfo
+    if group_col_name not in survey.qinfo['raw_col'].values:
+        survey.qinfo = pd.concat([
+            survey.qinfo,
+            pd.DataFrame([{
+                'raw_col': group_col_name,
+                'original_qid': 'g1',
+                'question_id': 'g1',
+                'qtype': 'S',
+                'short_name': 'income group'
+            }])
+        ], ignore_index=True)
+    
+    # 设置g1列
+    survey.qinfo.loc[survey.qinfo['original_qid'] == original_qid, 'g1'] = '收入分组'
+
 def merge_others(series, keywords=('other', '其他')):
     """
     把Series中所有包含指定关键词的选项全部归为'其他'，其余保持原样。
