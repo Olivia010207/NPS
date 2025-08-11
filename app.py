@@ -3,8 +3,9 @@ import pandas as pd
 import os
 from Survey_Data import SurveyData
 from ultis import *
-from metrics_cal import *
-
+from metrics_cal import nps_table, calc_nps_from_series, calc_nss_from_series
+from cross_analysis import cross_analysis
+from analysis import *
 # 设置页面配置
 st.set_page_config(
     page_title="NPS分析工具",
@@ -46,26 +47,15 @@ analysis_type = st.sidebar.selectbox(
 # 获取题号列表
 qids = survey.qinfo['original_qid'].unique().tolist()
 
+# 检查题号列表是否为空
+if not qids:
+    st.sidebar.error("错误: 未找到有效题号，请检查数据格式")
+    st.stop()
+
 # 根据分析类型设置参数
-if analysis_type == 'cross':
-    row_col = st.sidebar.selectbox("选择行变量题号", qids)
-    col_col = st.sidebar.selectbox("选择列变量题号", qids)
-    stat_row_name = st.sidebar.text_input("统计行名", "NPS")
-    
-    cross_args = {
-        "row_col": row_col,
-        "col_col": col_col,
-        "stat_row_name": stat_row_name
-    }
-    
-    if st.sidebar.button("运行分析"):
-        with st.spinner("分析中..."):
-            result = cross_analysis_handler(survey, cross_args)
-            st.session_state['result'] = result
-            st.success("分析完成！")
-else:
+if analysis_type in ['nps', 'nss', 'nss_detail', 'rank']:
     qid = st.sidebar.selectbox("选择题号", qids)
-    
+    # 运行分析按钮
     if st.sidebar.button("运行分析"):
         with st.spinner("分析中..."):
             if analysis_type == 'nps':
@@ -76,6 +66,36 @@ else:
                 result = nss_detail_analysis(survey, qid)
             elif analysis_type == 'rank':
                 result = rank_analysis(survey, qid)
+            st.session_state['result'] = result
+            st.success("分析完成！")
+elif analysis_type == 'cross':
+    # 添加计算方式选择框
+    row_col = st.sidebar.selectbox("选择行变量题号", qids)
+    
+    # 添加计算方式选择框
+    calc_method = st.sidebar.selectbox('计算方式', ['不计算', 'NPS'], index=0)
+    # 根据题型和选择设置统计函数和行名
+    _, row_qtype = survey.get_answers_by_qid(row_col, return_qtype=True)
+
+    col_col = st.sidebar.selectbox("选择列变量题号", qids)
+
+    # 获取选项标签
+    row_meta = survey.qinfo[survey.qinfo['original_qid'] == row_col].iloc[0]
+    col_meta = survey.qinfo[survey.qinfo['original_qid'] == col_col].iloc[0]
+    row_labels = row_meta.get('options', {})
+    col_labels = col_meta.get('options', {})
+
+    cross_args = {
+        "row_qid": row_col,
+        "col_qid": col_col,
+        "row_labels": row_labels,
+        "col_labels": col_labels,
+        "is_nps": calc_method == 'NPS'
+    }
+    # 运行分析按钮（确保在交叉分析分支内）
+    if st.sidebar.button("运行分析"):
+        with st.spinner("分析中..."):
+            result = cross_analysis_handler(survey, cross_args)
             st.session_state['result'] = result
             st.success("分析完成！")
 

@@ -1,5 +1,6 @@
 from ultis import *
 from metrics_cal import *
+from cross_analysis import cross_analysis
 
 def cross_analysis_handler(survey, cross_args):
     """
@@ -13,12 +14,10 @@ def cross_analysis_handler(survey, cross_args):
     if not cross_args:
         raise ValueError("cross分析需指定cross_args参数")
     # 获取行列变量数据
-    row_qid = cross_args['row_col']
-    col_qid = cross_args['col_col']
+    row_qid = cross_args['row_qid']
+    col_qid = cross_args['col_qid']
     row_labels = cross_args.get('row_labels')
-    stat_func = cross_args.get('stat_func')
-    stat_row_name = cross_args.get('stat_row_name')
-    is_numeric = cross_args.get('is_numeric', True)
+    is_nps = cross_args.get('is_nps', False)
 
     # 执行交叉分析
     cross_result = cross_analysis(
@@ -26,9 +25,7 @@ def cross_analysis_handler(survey, cross_args):
         row_qid=row_qid,
         col_qid=col_qid,
         row_labels=row_labels,
-        stat_func=stat_func,
-        stat_row_name=stat_row_name,
-        is_numeric=is_numeric
+        is_nps=is_nps
     )
 
     # 处理结果

@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 import os
 
-from metrics_cal import calc_nps_from_series
+from metrics_cal import nps_table
 # 用户可配置的分析列 - 请替换为实际存在的列名
 NPS_question = 'S2'#nps(修正为实际存在的NPS列名)
 mutiple_question = 'S64'#多选
@@ -33,43 +33,49 @@ def test_cross_analysis():
         # 场景1: 单选题 vs 多选题
         print("=== 场景1: 单选题(Q1) vs 多选题(Q2) ===")
         cross_args1 = {
-            'row_col': single_question,
-            'col_col': mutiple_question,
-            'is_numeric': True,
+            'row_qid': single_question,
+            'col_qid': mutiple_question,
+
         }
         result1 = cross_analysis_handler(survey, cross_args1)
-        for key, df in result1.items():
-            print(f"交叉表 - {key}:")
-            print(df)
-            print()
+        print("交叉表:")
+        print(result1)
+        print()
 
         # 场景2: NPS题 vs 多选题
         print("=== 场景2: NPS题(Q3) vs 多选题(Q2) ===")
         cross_args2 = {
-            'row_col': NPS_question,
-            'col_col': mutiple_question,
-            'is_numeric': True,
-            'stat_func': calc_nps_from_series,
-            'stat_row_name': 'nps'
+            'row_qid': NPS_question,
+            'col_qid': mutiple_question,
+            'is_nps': True
         }
         result2 = cross_analysis_handler(survey, cross_args2)
-        for key, df in result2.items():
-            print(f"交叉表 - {key}:")
-            print(df)
-            print()
+        print("交叉表:")
+        print(result2)
+        print()
 
         # 场景3: 多选题 vs 单选题
         print("=== 场景3: 多选题(Q2) vs 单选题(Q4) ===")
         cross_args3 = {
-            'row_col': mutiple_question,
-            'col_col': single_question,
-            'is_numeric': False
+            'row_qid': mutiple_question,
+            'col_qid': single_question,
+
         }
         result3 = cross_analysis_handler(survey, cross_args3)
-        for key, df in result3.items():
-            print(f"交叉表 - {key}:")
-            print(df)
-            print()
+        print("交叉表:")
+        print(result3)
+        print()
+
+        print("=== 场景4: 多选题(Q2) vs 单选题(Q4) ===")
+        cross_args4 = {
+            'row_qid': mutiple_question,
+            'col_qid': 'S28',
+
+        }
+        result4 = cross_analysis_handler(survey, cross_args4)
+        print("交叉表:")
+        print(result4)
+        print()
 
     finally:
         pass  # 真实数据文件无需删除
